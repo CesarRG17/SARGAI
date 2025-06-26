@@ -124,31 +124,46 @@ function handleFormSubmit(event) {
   const fileInput = document.querySelector('input[type="file"]');
   const mensaje = document.getElementById('mensaje');
   const resultado = document.getElementById('resultado');
+  const vistaCSV = document.getElementById('vista-csv');
 
   mensaje.textContent = "⏳ Clasificando...";
   resultado.innerHTML = "";
+  vistaCSV.innerHTML = "";
 
-  const file = fileInput.files[0];
-  if (!file) {
-    mensaje.textContent = "❌ Por favor selecciona una imagen válida.";
+  const files = fileInput.files;
+  if (!files.length) {
+    mensaje.textContent = "❌ Por favor selecciona al menos una imagen.";
     return;
   }
 
   const formData = new FormData();
-  formData.append("imagen", file); // 👈 Este nombre debe coincidir con FastAPI
+  for (let i = 0; i < files.length; i++) {
+    formData.append("archivos", files[i]); // nombre que usa FastAPI
+  }
 
-    fetch("/predecir", {
-      method: "POST",
-      body: formData
-    })
-
+  fetch("/predecir", {
+    method: "POST",
+    body: formData
+  })
   .then(response => {
-    if (!response.ok) throw new Error("Error al procesar la imagen");
+    if (!response.ok) throw new Error("Error al procesar imágenes.");
     return response.json();
   })
   .then(data => {
-    mensaje.innerHTML = "✅ Clasificado con éxito";
-    resultado.innerHTML = `<h4 class="w3-text-green">Nivel de sargazo: <b>${data.prediction.toUpperCase()}</b></h4>`;
+    mensaje.innerHTML = "✅ Clasificación completada";
+
+    // Mostrar predicciones
+    let html = "<h4 class='w3-text-green'>Predicciones:</h4><ul class='w3-ul'>";
+    data.resultados.forEach(item => {
+      html += `<li><b>${item.nombre}</b>: ${item.prediccion.toUpperCase()}</li>`;
+    });
+    html += "</ul>";
+    resultado.innerHTML = html;
+
+    // Botón para descargar CSV
+    vistaCSV.innerHTML = `
+      <button class="w3-button w3-green w3-round-large w3-margin-top" onclick="descargarCSV()">Descargar CSV</button>
+    `;
   })
   .catch(error => {
     mensaje.innerHTML = "❌ Error al clasificar.";
@@ -156,28 +171,18 @@ function handleFormSubmit(event) {
   });
 }
 
+
+
 function descargarCSV() {
-  const rutaCSV = "test_predictions_v3.csv";
   const link = document.createElement("a");
-  link.href = rutaCSV;
-  link.download = "predicciones.csv";
+  link.href = "/descargar_csv";
+  link.download = "predicciones_sargazo.csv";
+  document.body.appendChild(link);
   link.click();
+  document.body.removeChild(link);
 }
 
-function mostrarCSV() {
-  const csvEjemplo = `
-Id,Prediction
-IMG001.jpg,moderado
-IMG002.jpg,excesivo
-IMG003.jpg,nada
-IMG004.jpg,bajo
-IMG005.jpg,abundante
-`;
-  document.getElementById('vista-csv').innerHTML = `
-    <h5 class="w3-text-green">Vista previa del CSV:</h5>
-    <pre class="w3-code w3-light-grey" style="max-height: 200px; overflow:auto;">${csvEjemplo}</pre>
-  `;
-}
+
 
 function handleComentario(event) {
   event.preventDefault();
