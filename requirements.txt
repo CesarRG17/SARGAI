@@ -7,3 +7,4 @@ pillow
 scikit-learn
 matplotlib
 python-multipart
+pandas
