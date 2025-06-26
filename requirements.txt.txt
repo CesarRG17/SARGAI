@@ -1,8 +1,0 @@
-fastapi
-uvicorn
-torch
-torchvision
-jinja2
-pillow
-scikit-learn
-matplotlib
