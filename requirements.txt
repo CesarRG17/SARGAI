@@ -6,3 +6,4 @@ jinja2
 pillow
 scikit-learn
 matplotlib
+python-multipart
